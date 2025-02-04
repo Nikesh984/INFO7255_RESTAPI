@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../buildMultiTargeting/RestAPI_INFO7255.props" />
+</Project>
