@@ -16,19 +16,19 @@ namespace RestAPI_INFO7255.Services
         }
 
 
-        public Plan CreatePlan(string key, Plan plan)
+        public async Task<Plan> CreatePlan(string key, Plan plan)
         {
             if (plan != null)
             {
-                _planRepository.CreatePlanAsync(key, plan);
+                await _planRepository.CreatePlanAsync(key, plan);
             }
 
             return plan;
         }
 
-        public void DeletePlan(string key)
+        public async Task DeletePlan(string key)
         {
-            throw new NotImplementedException();
+            await _planRepository.DeletePlanAsync(key);
         }
 
 
