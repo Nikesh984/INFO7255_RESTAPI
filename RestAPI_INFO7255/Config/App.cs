@@ -1,9 +1,3 @@
-using System;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
 namespace RestAPI_INFO7255.Config
 {
     public class App
@@ -34,6 +28,7 @@ namespace RestAPI_INFO7255.Config
 
         private void AddServices(IServiceCollection services)
         {
+            //services.AddScoped<IRedisService, RedisService>();
             services.AddControllers();
         }
     }
