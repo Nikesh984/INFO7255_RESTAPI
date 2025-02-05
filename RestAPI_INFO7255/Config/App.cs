@@ -1,3 +1,7 @@
+using RestAPI_INFO7255.Repositories;
+using RestAPI_INFO7255.Services;
+using StackExchange.Redis;
+
 namespace RestAPI_INFO7255.Config
 {
     public class App
@@ -19,16 +23,25 @@ namespace RestAPI_INFO7255.Config
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseRouting();
+
             app.UseAuthorization();
 
             app.MapControllers();
+
+            //app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             return app;
         }
 
         private void AddServices(IServiceCollection services)
         {
-            //services.AddScoped<IRedisService, RedisService>();
+            services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect("localhost:6379"));
+
+            services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+
+            services.AddScoped<IPlanService, PlanService>();
+            services.AddScoped<IPlanRepository, PlanRepository>();
             services.AddControllers();
         }
     }

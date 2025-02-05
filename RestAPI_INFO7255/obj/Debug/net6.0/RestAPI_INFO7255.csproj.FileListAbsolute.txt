@@ -1,11 +1,17 @@
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/appsettings.Development.json
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/appsettings.json
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Resources/planSchema.json
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/RestAPI_INFO7255
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/RestAPI_INFO7255.deps.json
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/RestAPI_INFO7255.runtimeconfig.json
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/RestAPI_INFO7255.dll
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/RestAPI_INFO7255.pdb
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.InMemory.dll
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.OpenApi.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Pipelines.Sockets.Unofficial.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/StackExchange.Redis.dll
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Swashbuckle.AspNetCore.SwaggerUI.dll

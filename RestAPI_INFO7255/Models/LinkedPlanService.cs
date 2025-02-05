@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace RestAPI_INFO7255.Models
 {

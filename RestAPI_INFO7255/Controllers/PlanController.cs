@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using RestAPI_INFO7255.Models;
 using RestAPI_INFO7255.Services;
 
 namespace RestAPI_INFO7255.Controllers
 {
     [ApiController]
-    [Route("api/v1/plan")]
+    [Route("v1/plan")]
     public class PlanController : ControllerBase
     {
         private readonly ILogger _logger;
@@ -18,6 +19,18 @@ namespace RestAPI_INFO7255.Controllers
         }
 
         // Create a new plan
+        // [HttpPost]
+        // public async Task<IActionResult> CreatePlan([FromBody] Plan plan)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         return BadRequest(ModelState);
+        //     }
+
+        //     await _planService.CreatePlan(plan.ObjectId, plan);
+        //     return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);
+        // }
+
         [HttpPost]
         public async Task<IActionResult> CreatePlan([FromBody] Plan plan)
         {
@@ -26,16 +39,28 @@ namespace RestAPI_INFO7255.Controllers
                 return BadRequest(ModelState);
             }
 
-            await _planService.CreatePlan(plan.ObjectId, plan);
+            var etag = await _planService.CreatePlan(plan.ObjectId, plan);
+
+            Response.Headers[HeaderNames.ETag] = etag.ToString(); // Add ETag to response headers
             return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);
         }
 
         // Retrieve a plan by ID
+        // [HttpGet("{id}")]
+        // public async Task<IActionResult> GetPlan(string id)
+        // {
+        //     var plan = await _planService.GetPlan(id);
+        //     if (plan == null) return NotFound();
+        //     return Ok(plan);
+        // }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPlan(string id)
         {
-            var plan = await _planService.GetPlan(id);
+            var (plan, etag) = await _planService.GetPlan(id);
             if (plan == null) return NotFound();
+
+            Response.Headers[HeaderNames.ETag] = etag; // Add ETag to response headers
             return Ok(plan);
         }
 

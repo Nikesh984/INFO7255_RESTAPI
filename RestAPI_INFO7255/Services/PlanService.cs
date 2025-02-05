@@ -32,7 +32,7 @@ namespace RestAPI_INFO7255.Services
         }
 
 
-        public async Task<Plan> GetPlan(string key)
+        public async Task<(Plan?, string?)> GetPlan(string key)
         {
             return await _planRepository.GetPlanAsync(key);
         }
