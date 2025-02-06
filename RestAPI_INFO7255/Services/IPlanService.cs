@@ -4,8 +4,11 @@ namespace RestAPI_INFO7255.Services
 {
     public interface IPlanService
     {
-        Task<Plan> CreatePlan(string key, Plan plan);
+        // string CreatePlan(Plan plan);
+        // Task<(Plan?, string?)> GetPlan(string key);
+        // Task DeletePlan(string key);
+
+        Task<string> CreatePlan(Plan plan);
         Task<(Plan?, string?)> GetPlan(string key);
-        Task DeletePlan(string key);
     }
 }

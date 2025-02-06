@@ -15,27 +15,44 @@ namespace RestAPI_INFO7255.Services
             _logger = logger;
         }
 
-
-        public async Task<Plan> CreatePlan(string key, Plan plan)
+        public async Task<string> CreatePlan(Plan plan)
         {
             if (plan != null)
             {
-                await _planRepository.CreatePlanAsync(key, plan);
+                // Generate the ETag and save the plan to Redis
+                string etag = await _planRepository.CreatePlanAsync(plan);
+                return etag;
             }
-
-            return plan;
+            return null;
         }
-
-        public async Task DeletePlan(string key)
-        {
-            await _planRepository.DeletePlanAsync(key);
-        }
-
 
         public async Task<(Plan?, string?)> GetPlan(string key)
         {
             return await _planRepository.GetPlanAsync(key);
         }
+
+
+        // public string CreatePlan(Plan plan)
+        // {
+        //     if (plan != null)
+        //     {
+        //         string etag = _planRepository.CreatePlan(plan);
+        //         return etag;
+        //     }
+
+        //     return null;
+        // }
+
+        // public async Task DeletePlan(string key)
+        // {
+        //     await _planRepository.DeletePlanAsync(key);
+        // }
+
+
+        // public async Task<(Plan?, string?)> GetPlan(string key)
+        // {
+        //     return await _planRepository.GetPlanAsync(key);
+        // }
 
     }
 }

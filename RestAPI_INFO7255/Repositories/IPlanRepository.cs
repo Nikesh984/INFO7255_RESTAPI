@@ -4,8 +4,12 @@ namespace RestAPI_INFO7255.Repositories
 {
     public interface IPlanRepository
     {
-        Task<string> CreatePlanAsync(string key, Plan plan);
+        // string CreatePlan(Plan plan);
+        // Task<(Plan?, string?)> GetPlanAsync(string key);
+        // Task DeletePlanAsync(string key);
+
+        Task<string> CreatePlanAsync(Plan plan);
+
         Task<(Plan?, string?)> GetPlanAsync(string key);
-        Task DeletePlanAsync(string key);
     }
 }

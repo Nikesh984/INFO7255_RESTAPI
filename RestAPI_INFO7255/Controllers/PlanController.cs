@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
+using RestAPI_INFO7255.Helpers;
 using RestAPI_INFO7255.Models;
 using RestAPI_INFO7255.Services;
 
@@ -18,58 +19,37 @@ namespace RestAPI_INFO7255.Controllers
             _planService = planService;
         }
 
-        // Create a new plan
-        // [HttpPost]
-        // public async Task<IActionResult> CreatePlan([FromBody] Plan plan)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         return BadRequest(ModelState);
-        //     }
-
-        //     await _planService.CreatePlan(plan.ObjectId, plan);
-        //     return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);
-        // }
-
         [HttpPost]
         public async Task<IActionResult> CreatePlan([FromBody] Plan plan)
         {
-            if (!ModelState.IsValid)
+            if (plan == null)
             {
-                return BadRequest(ModelState);
+                return BadRequest("Plan data is required.");
             }
 
-            var etag = await _planService.CreatePlan(plan.ObjectId, plan);
+            // Call the service to create the plan and get the ETag
+            string etag = await _planService.CreatePlan(plan);
 
-            Response.Headers[HeaderNames.ETag] = etag.ToString(); // Add ETag to response headers
+            // Return response with ETag header
+            Response.Headers[HeaderNames.ETag] = etag;
             return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);
         }
 
-        // Retrieve a plan by ID
-        // [HttpGet("{id}")]
-        // public async Task<IActionResult> GetPlan(string id)
-        // {
-        //     var plan = await _planService.GetPlan(id);
-        //     if (plan == null) return NotFound();
-        //     return Ok(plan);
-        // }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetPlan(string id)
+        [HttpGet]
+        public async Task<IActionResult> GetPlan([FromQuery] string id)
         {
             var (plan, etag) = await _planService.GetPlan(id);
             if (plan == null) return NotFound();
 
-            Response.Headers[HeaderNames.ETag] = etag; // Add ETag to response headers
+            if (Request.Headers.TryGetValue("If-None-Match", out var requestEtag) && requestEtag == etag)
+            {
+                return StatusCode(StatusCodes.Status304NotModified); // No changes
+            }
+
+            // Add ETag to response header
+            Response.Headers[HeaderNames.ETag] = etag;
             return Ok(plan);
         }
 
-        // Delete a plan by ID
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePlan(string id)
-        {
-            await _planService.DeletePlan(id);
-            return NoContent();
-        }
     }
 }
