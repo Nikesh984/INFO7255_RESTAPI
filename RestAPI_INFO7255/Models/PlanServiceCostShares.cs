@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace RestAPI_INFO7255.Models
 {
@@ -8,6 +9,7 @@ namespace RestAPI_INFO7255.Models
         public int Deductible { get; set; }
 
         [Required]
+
         public string _org { get; set; }
 
         [Required]

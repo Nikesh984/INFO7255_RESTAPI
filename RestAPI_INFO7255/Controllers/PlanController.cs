@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Net.Http.Headers;
 using RestAPI_INFO7255.Helpers;
 using RestAPI_INFO7255.Models;
@@ -22,6 +23,10 @@ namespace RestAPI_INFO7255.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePlan([FromBody] Plan plan)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
 
             if (plan == null)
             {
