@@ -28,7 +28,6 @@ namespace RestAPI_INFO7255.Config
             app.UseAuthorization();
 
             app.MapControllers();
-
             //app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             return app;

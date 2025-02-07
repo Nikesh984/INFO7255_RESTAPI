@@ -10,6 +10,8 @@ namespace RestAPI_INFO7255.Repositories
 
         Task<string> CreatePlanAsync(Plan plan);
 
-        Task<(Plan?, string?)> GetPlanAsync(string key);
+        Task<(Plan?, string?)> GetPlanAsync(string planId, string? clientEtag);
+
+        Task DeletePlanAsync(string planId);
     }
 }

@@ -22,34 +22,64 @@ namespace RestAPI_INFO7255.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePlan([FromBody] Plan plan)
         {
+
             if (plan == null)
             {
-                return BadRequest("Plan data is required.");
+                return BadRequest(new { message = "Plan data is required." });
             }
 
-            // Call the service to create the plan and get the ETag
-            string etag = await _planService.CreatePlan(plan);
+            var (existingPlan, dummy) = await _planService.GetPlanAsync(plan.ObjectId, null);
 
-            // Return response with ETag header
-            Response.Headers[HeaderNames.ETag] = etag;
-            return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);
+            if (existingPlan != null)
+            {
+                return Conflict(new { message = "A plan with this ID already exists." });
+            }
+
+            var etag = await _planService.CreatePlan(plan);
+
+            // Return the created plan with the ETag header
+            Response.Headers.Add("ETag", etag);
+
+            return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);  // Or another appropriate response
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetPlan([FromQuery] string id)
-        {
-            var (plan, etag) = await _planService.GetPlan(id);
-            if (plan == null) return NotFound();
 
-            if (Request.Headers.TryGetValue("If-None-Match", out var requestEtag) && requestEtag == etag)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPlan(string id, [FromHeader(Name = "If-None-Match")] string? clientEtag)
+        {
+            var (plan, etag) = await _planService.GetPlanAsync(id, clientEtag);
+
+            // If the plan was not modified, return 304 Not Modified
+            if (plan == null)
             {
-                return StatusCode(StatusCodes.Status304NotModified); // No changes
+                return clientEtag != null ? StatusCode(304, new { message = "Content not modified" }) : NotFound();
             }
 
-            // Add ETag to response header
-            Response.Headers[HeaderNames.ETag] = etag;
+            // Return the plan with the ETag in the response headers
+            Response.Headers.Add("ETag", etag!);
             return Ok(plan);
         }
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePlan(string id)
+        {
+            _logger.LogInformation($"Received request to delete plan with ID: {id}");
+
+            var (existingPlan, dummyEtag) = await _planService.GetPlanAsync(id, null);
+
+            if (existingPlan == null)
+            {
+                return NotFound(new { message = "Plan not found." });
+            }
+
+            await _planService.DeletePlanAsync(id);
+
+            _logger.LogInformation($"Successfully deleted plan with ID: {id}");
+            return NoContent();
+        }
+
+
 
     }
 }

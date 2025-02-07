@@ -20,31 +20,38 @@ namespace RestAPI_INFO7255.Repositories
 
         public async Task<string> CreatePlanAsync(Plan plan)
         {
-            string planKey = $"plan:{plan.ObjectId}";
+            string planKey = plan.ObjectId;
 
             // Serialize the plan to JSON
             string planJson = JsonSerializer.Serialize(plan);
 
             // Generate ETag using SHA256
-            string etag = GenerateETag(planKey);
+            string etag = GenerateETag(planJson);
 
-            // Store the plan in Redis with the ETag
-            var planWithEtag = new
-            {
-                Data = plan,
-                ETag = etag
-            };
+            // Store the plan in Redis without ETag (no need to store the ETag in the database)
+            await _db.StringSetAsync(planKey, planJson);
 
-            _logger.LogInformation($"Storing plan with key: {planKey}");
-            await _db.StringSetAsync(planKey, JsonSerializer.Serialize(planWithEtag));
-
-
-            return etag; // Return the ETag
+            // Return the generated ETag (this will be returned in the response header)
+            return etag;
         }
 
-        public async Task<(Plan?, string?)> GetPlanAsync(string planId)
+        public async Task DeletePlanAsync(string planId)
         {
-            string planKey = $"plan:{planId}";
+            bool isDeleted = await _db.KeyDeleteAsync(planId);
+
+            if (!isDeleted)
+            {
+                _logger.LogWarning($"Plan with ID {planId} not found in Redis.");
+            }
+            else
+            {
+                _logger.LogInformation($"Plan with ID {planId} deleted successfully.");
+            }
+        }
+
+        public async Task<(Plan?, string?)> GetPlanAsync(string planId, string? clientEtag)
+        {
+            string planKey = planId;
             _logger.LogInformation($"Attempting to retrieve plan with key: {planKey}");
 
             string? planJson = await _db.StringGetAsync(planKey);
@@ -52,16 +59,26 @@ namespace RestAPI_INFO7255.Repositories
             if (string.IsNullOrEmpty(planJson))
             {
                 _logger.LogWarning($"Plan with ID {planId} not found.");
-                return (null, null);
+                return (null, null);  // Plan not found
             }
 
-            string etag = GenerateETag(planJson);
+            // Generate the ETag based on the plan's current data
+            string currentEtag = GenerateETag(planJson);
+            _logger.LogInformation($"CurrentEtag = {currentEtag}, ClientETag = {clientEtag}");
+
+            // If the client ETag matches the current ETag, return 304 (Not Modified)
+            if (clientEtag != null && clientEtag == currentEtag)
+            {
+                _logger.LogInformation($"Plan with ETag {clientEtag} not modified.");
+                return (null, null);  // Return null indicating 304 Not Modified
+            }
+
+            // Deserialize the plan if it's modified
             Plan? plan = JsonSerializer.Deserialize<Plan>(planJson);
 
-            return (plan, etag);
+            _logger.LogInformation($"Returning plan with ETag: {currentEtag}");
+            return (plan, currentEtag);  // Return the plan along with the current ETag
         }
-
-
 
         private string GenerateETag(string data)
         {
@@ -71,110 +88,5 @@ namespace RestAPI_INFO7255.Repositories
                 return $"\"{Convert.ToBase64String(hashBytes)}\""; // Base64 encoding for readability
             }
         }
-
-        // public async Task CreatePlanAsync(string key, Plan plan)
-        // {
-        //     var jsonData = JsonSerializer.Serialize(plan);
-        //     await _db.StringSetAsync(key, jsonData);
-        // }
-
-
-        //working
-
-        // private string GenerateETag(string jsonData)
-        // {
-        //     using (var sha256 = SHA256.Create())
-        //     {
-        //         byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(jsonData));
-        //         return Convert.ToBase64String(hashBytes);
-        //     }
-        // }
-
-        //working
-
-        // public async Task<string> CreatePlanAsync(string key, Plan plan)
-        // {
-        //     var jsonData = JsonSerializer.Serialize(plan);
-        //     var etag = GenerateETag(jsonData); // Generate ETag
-
-        //     var planWithEtag = new
-        //     {
-        //         Data = plan,
-        //         ETag = etag
-        //     };
-
-        //     await _db.StringSetAsync(key, JsonSerializer.Serialize(planWithEtag));
-
-        //     return etag; // Return the ETag
-        // }
-
-        // public string CreatePlan(Plan plan)
-        // {
-        //     string planKey = $"plan:{plan.ObjectId}";
-
-        //     // Serialize the plan to JSON
-        //     string planJson = JsonSerializer.Serialize(plan);
-
-        //     // Compute SHA256 hash for ETag
-        //     string etag = GenerateETag(planJson);
-
-        //     // Store the plan in Redis
-        //     _db.StringSet(planKey, planJson);
-
-        //     return etag;
-        // }
-
-        // private string GenerateETag(string data)
-        // {
-        //     using (SHA256 sha256 = SHA256.Create())
-        //     {
-        //         byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
-        //         return $"\"{Convert.ToBase64String(hashBytes)}\""; // Base64 encoding for readability
-        //     }
-        // }
-
-
-
-
-        // public async Task DeletePlanAsync(string key)
-        // {
-        //     await _db.KeyDeleteAsync(key);
-        // }
-
-        // // public async Task<(Plan?, string?)> GetPlanAsync(string key)
-        // // {
-        // //     var jsonData = await _db.StringGetAsync(key);
-        // //     if (jsonData.IsNullOrEmpty) return (null, null);
-
-        // //     var planData = JsonSerializer.Deserialize<JsonElement>(jsonData!);
-        // //     var plan = JsonSerializer.Deserialize<Plan>(planData.GetProperty("Data").GetRawText());
-        // //     var etag = planData.GetProperty("ETag").GetString();
-
-        // //     return (plan, etag);
-        // // }
-
-
-        // public async Task<(Plan?, string?)> GetPlanAsync(string planId)
-        // {
-        //     string planKey = $"plan:{planId}";
-
-        //     // Retrieve the JSON data from Redis
-        //     string? planJson = await _db.StringGetAsync(planKey);
-
-        //     if (string.IsNullOrEmpty(planJson))
-        //     {
-        //         return (null, null);
-        //     }
-
-        //     // Compute the ETag based on stored data
-        //     string etag = GenerateETag(planJson);
-
-        //     // Deserialize the JSON into a Plan object
-        //     Plan? plan = JsonSerializer.Deserialize<Plan>(planJson);
-
-        //     return (plan, etag);
-        // }
-
-
     }
 }
