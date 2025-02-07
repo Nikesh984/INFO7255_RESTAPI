@@ -40,7 +40,8 @@ namespace RestAPI_INFO7255.Controllers
             // Return the created plan with the ETag header
             Response.Headers.Add("ETag", etag);
 
-            return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);  // Or another appropriate response
+            return StatusCode(201, new { message = $"Plan created with object id : {plan.ObjectId}" });
+            //return CreatedAtAction(nameof(GetPlan), new { id = plan.ObjectId }, plan);
         }
 
 
@@ -78,8 +79,5 @@ namespace RestAPI_INFO7255.Controllers
             _logger.LogInformation($"Successfully deleted plan with ID: {id}");
             return NoContent();
         }
-
-
-
     }
 }
