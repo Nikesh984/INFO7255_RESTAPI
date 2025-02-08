@@ -1,3 +1,4 @@
+using CodeChallenge.Config;
 using RestAPI_INFO7255.Repositories;
 using RestAPI_INFO7255.Services;
 using StackExchange.Redis;
@@ -11,6 +12,8 @@ namespace RestAPI_INFO7255.Config
             args ??= Array.Empty<string>();
 
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.UseRedisDB();
 
             AddServices(builder.Services);
 
@@ -35,9 +38,6 @@ namespace RestAPI_INFO7255.Config
 
         private void AddServices(IServiceCollection services)
         {
-            services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect("localhost:6379"));
-
-            services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
 
             services.AddScoped<IPlanService, PlanService>();
             services.AddScoped<IPlanRepository, PlanRepository>();
