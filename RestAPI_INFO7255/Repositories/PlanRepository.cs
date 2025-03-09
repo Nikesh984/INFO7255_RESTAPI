@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.JsonPatch;
 using RestAPI_INFO7255.Models;
 using StackExchange.Redis;
 
@@ -86,6 +87,126 @@ namespace RestAPI_INFO7255.Repositories
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
                 return $"\"{Convert.ToBase64String(hashBytes)}\""; // Base64 encoding for readability
+            }
+        }
+
+        public async Task<string> UpdatePlanAsync(string planId, Plan updatePlan, string? clientEtag)
+        {
+            string planKey = planId;
+            string? existingJson = await _db.StringGetAsync(planKey);
+
+            if (string.IsNullOrEmpty(existingJson))
+            {
+                _logger.LogWarning($"Plan with ID {planKey} not found for update.");
+                throw new KeyNotFoundException("Plan not found.");
+            }
+
+            string currentEtag = GenerateETag(existingJson);
+            if (clientEtag != null && clientEtag != currentEtag)
+            {
+                _logger.LogWarning($"ETag mismatch for plan {planKey}. Client: {clientEtag}, Current: {currentEtag}");
+                throw new InvalidOperationException("ETag mismatch. Plan has been modified.");
+            }
+
+            Plan? existingPlan = JsonSerializer.Deserialize<Plan>(existingJson);
+            MergePlans(existingPlan!, updatePlan);
+
+            string updatedJson = JsonSerializer.Serialize(existingPlan);
+            string newEtag = GenerateETag(updatedJson);
+            await _db.StringSetAsync(planKey, updatedJson);
+            _logger.LogInformation($"Plan {planKey} updated successfully.");
+            return newEtag;
+        }
+
+        public async Task<string> MergePlanAsync(string planId, Plan patchPlan, string? clientEtag)
+        {
+            string planKey = planId;
+            string? existingJson = await _db.StringGetAsync(planKey);
+
+            if (string.IsNullOrEmpty(existingJson))
+            {
+                _logger.LogWarning($"Plan with ID {planKey} not found for merge.");
+                throw new KeyNotFoundException("Plan not found.");
+            }
+
+            string currentEtag = GenerateETag(existingJson);
+            if (clientEtag != null && clientEtag != currentEtag)
+            {
+                _logger.LogWarning($"ETag mismatch for plan {planKey}. Client: {clientEtag}, Current: {currentEtag}");
+                throw new InvalidOperationException("ETag mismatch. Plan has been modified.");
+            }
+
+            Plan? existingPlan = JsonSerializer.Deserialize<Plan>(existingJson);
+            MergePlans(existingPlan!, patchPlan);
+
+            string updatedJson = JsonSerializer.Serialize(existingPlan);
+            string newEtag = GenerateETag(updatedJson);
+            await _db.StringSetAsync(planKey, updatedJson);
+            _logger.LogInformation($"Plan {planKey} merged successfully.");
+            return newEtag;
+        }
+
+        private void MergePlans(Plan existingPlan, Plan patchPlan)
+        {
+            // Merge top-level fields
+            if (patchPlan._org != null) existingPlan._org = patchPlan._org;
+            if (patchPlan.ObjectId != null) existingPlan.ObjectId = patchPlan.ObjectId;
+            if (patchPlan.ObjectType != null) existingPlan.ObjectType = patchPlan.ObjectType;
+            if (patchPlan.PlanType != null) existingPlan.PlanType = patchPlan.PlanType;
+            if (patchPlan.CreationDate != default) existingPlan.CreationDate = patchPlan.CreationDate;
+
+            // Merge PlanCostShares
+            if (patchPlan.PlanCostShares != null)
+            {
+                existingPlan.PlanCostShares ??= new PlanCostShares();
+                if (patchPlan.PlanCostShares.Deductible.HasValue) existingPlan.PlanCostShares.Deductible = patchPlan.PlanCostShares.Deductible;
+                if (patchPlan.PlanCostShares.Copay.HasValue) existingPlan.PlanCostShares.Copay = patchPlan.PlanCostShares.Copay;
+                if (patchPlan.PlanCostShares._org != null) existingPlan.PlanCostShares._org = patchPlan.PlanCostShares._org;
+                if (patchPlan.PlanCostShares.ObjectId != null) existingPlan.PlanCostShares.ObjectId = patchPlan.PlanCostShares.ObjectId;
+                if (patchPlan.PlanCostShares.ObjectType != null) existingPlan.PlanCostShares.ObjectType = patchPlan.PlanCostShares.ObjectType;
+            }
+
+            // Merge LinkedPlanServices
+            if (patchPlan.LinkedPlanServices != null && patchPlan.LinkedPlanServices.Count > 0)
+            {
+                foreach (var patchService in patchPlan.LinkedPlanServices)
+                {
+                    var existingService = existingPlan.LinkedPlanServices
+                        .FirstOrDefault(s => s.ObjectId == patchService.ObjectId);
+
+                    if (existingService != null)
+                    {
+                        // Update existing service
+                        if (patchService._org != null) existingService._org = patchService._org;
+                        if (patchService.ObjectType != null) existingService.ObjectType = patchService.ObjectType;
+
+                        // Merge LinkedService
+                        if (patchService.LinkedService != null)
+                        {
+                            existingService.LinkedService ??= new LinkedService();
+                            if (patchService.LinkedService._org != null) existingService.LinkedService._org = patchService.LinkedService._org;
+                            if (patchService.LinkedService.ObjectId != null) existingService.LinkedService.ObjectId = patchService.LinkedService.ObjectId;
+                            if (patchService.LinkedService.ObjectType != null) existingService.LinkedService.ObjectType = patchService.LinkedService.ObjectType;
+                            if (patchService.LinkedService.Name != null) existingService.LinkedService.Name = patchService.LinkedService.Name;
+                        }
+
+                        // Merge PlanServiceCostShares
+                        if (patchService.PlanServiceCostShares != null)
+                        {
+                            existingService.PlanServiceCostShares ??= new PlanServiceCostShares();
+                            if (patchService.PlanServiceCostShares.Deductible.HasValue) existingService.PlanServiceCostShares.Deductible = patchService.PlanServiceCostShares.Deductible;
+                            if (patchService.PlanServiceCostShares.Copay.HasValue) existingService.PlanServiceCostShares.Copay = patchService.PlanServiceCostShares.Copay;
+                            if (patchService.PlanServiceCostShares._org != null) existingService.PlanServiceCostShares._org = patchService.PlanServiceCostShares._org;
+                            if (patchService.PlanServiceCostShares.ObjectId != null) existingService.PlanServiceCostShares.ObjectId = patchService.PlanServiceCostShares.ObjectId;
+                            if (patchService.PlanServiceCostShares.ObjectType != null) existingService.PlanServiceCostShares.ObjectType = patchService.PlanServiceCostShares.ObjectType;
+                        }
+                    }
+                    else
+                    {
+                        // Add new service if it doesn’t exist
+                        existingPlan.LinkedPlanServices.Add(patchService);
+                    }
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
+using System.Xml.Linq;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Net.Http.Headers;
 using RestAPI_INFO7255.Helpers;
 using RestAPI_INFO7255.Models;
 using RestAPI_INFO7255.Services;
@@ -84,5 +84,79 @@ namespace RestAPI_INFO7255.Controllers
             _logger.LogInformation($"Successfully deleted plan with ID: {id}");
             return NoContent();
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePlan(string id, [FromBody] Plan plan, [FromHeader(Name = "If-Match")] string? clientEtag)
+        {
+            if (string.IsNullOrEmpty(id) || plan == null)
+            {
+                return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "Plan ID or data is required." });
+            }
+            if (id != plan.ObjectId)
+            {
+                return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "Plan ID in URL must match ObjectId in body." });
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+            try
+            {
+                var etag = await _planService.UpdatePlanAsync(id, plan, clientEtag);
+                var (updatedPlan, _) = await _planService.GetPlanAsync(id, null); // Fetch the merged plan
+                return this.WithETag(Ok(updatedPlan), etag);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new ProblemDetails { Title = "Not Found", Detail = "Plan not found." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(412, new ProblemDetails { Title = "Precondition Failed", Detail = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update plan with ID {Id}", id);
+                return StatusCode(500, new ProblemDetails { Title = "Server Error", Detail = "Failed to update plan." });
+            }
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> MergePlan(string id, [FromBody] Plan patchPlan, [FromHeader(Name = "If-Match")] string? clientEtag)
+        {
+            if (string.IsNullOrEmpty(id) || patchPlan == null)
+            {
+                return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "Plan ID or patch data is required." });
+            }
+            if (id != patchPlan.ObjectId)
+            {
+                return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "Plan ID in URL must match ObjectId in body." });
+            }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+            try
+            {
+                var (existingPlan, _) = await _planService.GetPlanAsync(id, null);
+                if (existingPlan == null) return NotFound();
+
+                var etag = await _planService.MergePlanAsync(id, patchPlan, clientEtag);
+                var (updatedPlan, _) = await _planService.GetPlanAsync(id, null);
+                return this.WithETag(Ok(updatedPlan), etag);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(412, new ProblemDetails { Title = "Precondition Failed", Detail = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to merge plan with ID {Id}", id);
+                return StatusCode(500, new ProblemDetails { Title = "Server Error", Detail = "Failed to merge plan." });
+            }
+        }
+
     }
 }

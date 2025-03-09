@@ -37,3 +37,7 @@
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/obj/Debug/net6.0/RestAPI_INFO7255.pdb
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/obj/Debug/net6.0/RestAPI_INFO7255.genruntimeconfig.cache
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/obj/Debug/net6.0/ref/RestAPI_INFO7255.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.AspNetCore.JsonPatch.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Newtonsoft.Json.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Newtonsoft.Json.Bson.dll

@@ -42,6 +42,7 @@ namespace RestAPI_INFO7255.Config
             services.AddScoped<IPlanService, PlanService>();
             services.AddScoped<IPlanRepository, PlanRepository>();
             services.AddControllers();
+            //.AddNewtonsoftJson();
         }
     }
 }
