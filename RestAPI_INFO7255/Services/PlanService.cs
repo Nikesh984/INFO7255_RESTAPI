@@ -37,16 +37,6 @@ namespace RestAPI_INFO7255.Services
             return await _planRepository.GetPlanAsync(planId, clientEtag);
         }
 
-        // public async Task<string> UpdatePlanAsync(Plan plan, string? clientEtag)
-        // {
-        //     if (plan == null)
-        //     {
-        //         _logger.LogWarning("UpdatePlan called with null plan.");
-        //         throw new ArgumentNullException(nameof(plan));
-        //     }
-        //     return await _planRepository.UpdatePlanAsync(plan, clientEtag);
-        // }
-
         public async Task<string> UpdatePlanAsync(string planId, Plan updatePlan, string? clientEtag)
         {
             if (string.IsNullOrEmpty(planId))

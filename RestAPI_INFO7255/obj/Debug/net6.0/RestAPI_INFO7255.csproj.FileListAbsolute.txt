@@ -41,3 +41,16 @@
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Newtonsoft.Json.dll
 /Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Newtonsoft.Json.Bson.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Google.Apis.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Google.Apis.Auth.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Google.Apis.Core.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.IdentityModel.Logging.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/Microsoft.IdentityModel.Tokens.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/System.CodeDom.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/System.IdentityModel.Tokens.Jwt.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/System.Management.dll
+/Users/nikeshbiraggari/Desktop/Files/Big Data Indexing/INFO7255_RESTAPI/RestAPI_INFO7255/bin/Debug/net6.0/runtimes/win/lib/net6.0/System.Management.dll

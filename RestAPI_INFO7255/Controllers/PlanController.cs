@@ -1,5 +1,4 @@
-using System.Xml.Linq;
-using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestAPI_INFO7255.Helpers;
 using RestAPI_INFO7255.Models;
@@ -9,6 +8,7 @@ namespace RestAPI_INFO7255.Controllers
 {
     [ApiController]
     [Route("v1/plan")]
+    [Authorize]
     public class PlanController : ControllerBase
     {
         private readonly ILogger _logger;
