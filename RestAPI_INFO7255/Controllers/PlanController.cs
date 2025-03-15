@@ -158,8 +158,59 @@ namespace RestAPI_INFO7255.Controllers
         //     }
         // }
 
+        //     [HttpPatch("{id}")]
+        //     public async Task<IActionResult> MergePlan(string id, [FromBody] Plan patchPlan, [FromHeader(Name = "If-Match")] string? clientEtag)
+        //     {
+        //         if (string.IsNullOrEmpty(id) || patchPlan == null)
+        //         {
+        //             return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "Plan ID or patch data is required." });
+        //         }
+        //         if (id != patchPlan.ObjectId)
+        //         {
+        //             return BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = "Plan ID in URL must match ObjectId in body." });
+        //         }
+        //         if (!ModelState.IsValid)
+        //         {
+        //             return BadRequest(new ValidationProblemDetails(ModelState));
+        //         }
+        //         if (string.IsNullOrEmpty(clientEtag))
+        //         {
+        //             return StatusCode(428, new ProblemDetails { Title = "Precondition Required", Detail = "If-Match header with ETag is required for PATCH." });
+        //         }
+
+        //         try
+        //         {
+        //             var (existingPlan, currentEtag) = await _planService.GetPlanAsync(id, null);
+        //             if (existingPlan == null)
+        //             {
+        //                 return NotFound(new ProblemDetails { Title = "Not Found", Detail = "Plan not found." });
+        //             }
+
+        //             // Compare client-provided ETag with current ETag
+        //             if (clientEtag != currentEtag)
+        //             {
+        //                 return StatusCode(412, new ProblemDetails { Title = "Precondition Failed", Detail = "ETag mismatch. The resource has been modified." });
+        //             }
+
+        //             var newEtag = await _planService.MergePlanAsync(id, patchPlan, clientEtag);
+        //             var (updatedPlan, _) = await _planService.GetPlanAsync(id, null);
+        //             return this.WithETag(Ok(updatedPlan), newEtag);
+        //         }
+        //         catch (InvalidOperationException ex)
+        //         {
+        //             return StatusCode(412, new ProblemDetails { Title = "Precondition Failed", Detail = ex.Message });
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             _logger.LogError(ex, "Failed to merge plan with ID {Id}", id);
+        //             return StatusCode(500, new ProblemDetails { Title = "Server Error", Detail = "Failed to merge plan." });
+        //         }
+        //     }
+
+        // }
+
         [HttpPatch("{id}")]
-        public async Task<IActionResult> MergePlan(string id, [FromBody] Plan patchPlan, [FromHeader(Name = "If-None-Match")] string? clientEtag)
+        public async Task<IActionResult> MergePlan(string id, [FromBody] Plan patchPlan, [FromHeader(Name = "If-Match")] string? clientEtag)
         {
             if (string.IsNullOrEmpty(id) || patchPlan == null)
             {
@@ -186,7 +237,6 @@ namespace RestAPI_INFO7255.Controllers
                     return NotFound(new ProblemDetails { Title = "Not Found", Detail = "Plan not found." });
                 }
 
-                // Compare client-provided ETag with current ETag
                 if (clientEtag != currentEtag)
                 {
                     return StatusCode(412, new ProblemDetails { Title = "Precondition Failed", Detail = "ETag mismatch. The resource has been modified." });
@@ -206,6 +256,5 @@ namespace RestAPI_INFO7255.Controllers
                 return StatusCode(500, new ProblemDetails { Title = "Server Error", Detail = "Failed to merge plan." });
             }
         }
-
     }
 }

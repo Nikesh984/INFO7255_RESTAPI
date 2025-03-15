@@ -5,11 +5,9 @@ namespace RestAPI_INFO7255.Models
 {
     public class Plan
     {
-        [Required]
-        public PlanCostShares PlanCostShares { get; set; }
+        public PlanCostShares? PlanCostShares { get; set; }
 
-        [Required]
-        public List<LinkedPlanService> LinkedPlanServices { get; set; }
+        public List<LinkedPlanService>? LinkedPlanServices { get; set; }
 
         [Required]
         public string _org { get; set; }
@@ -24,6 +22,6 @@ namespace RestAPI_INFO7255.Models
         public string PlanType { get; set; }
 
         [Required]
-        public DateTimeOffset CreationDate { get; set; }
+        public DateTimeOffset? CreationDate { get; set; }
     }
 }
