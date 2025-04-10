@@ -37,8 +37,8 @@ namespace RestAPI_INFO7255.Repositories
                 };
                 var indexResponse = await _elasticClient.IndexAsync(planDoc, i => i
                     .Index("plans")
-                    .Id(plan.ObjectId)
-                    .Type("_doc"));
+                    .Id(plan.ObjectId));
+                //.Type("_doc"));
                 if (!indexResponse.IsValid)
                 {
                     var errorMessage = indexResponse.ServerError?.Error?.Reason ?? indexResponse.DebugInformation ?? "Unknown error";
@@ -62,8 +62,8 @@ namespace RestAPI_INFO7255.Repositories
                     var costShareResponse = await _elasticClient.IndexAsync(costShareDoc, i => i
                         .Index("plans")
                         .Id(plan.PlanCostShares.ObjectId)
-                        .Routing(plan.ObjectId)
-                        .Type("_doc"));
+                        .Routing(plan.ObjectId));
+                    //.Type("_doc"));
                     if (!costShareResponse.IsValid)
                     {
                         var errorMessage = costShareResponse.ServerError?.Error?.Reason ?? costShareResponse.DebugInformation ?? "Unknown error";
@@ -90,8 +90,8 @@ namespace RestAPI_INFO7255.Repositories
                         var serviceResponse = await _elasticClient.IndexAsync(serviceDoc, i => i
                             .Index("plans")
                             .Id(service.ObjectId)
-                            .Routing(plan.ObjectId)
-                            .Type("_doc"));
+                            .Routing(plan.ObjectId));
+                        //.Type("_doc"));
                         if (!serviceResponse.IsValid)
                         {
                             var errorMessage = serviceResponse.ServerError?.Error?.Reason ?? serviceResponse.DebugInformation ?? "Unknown error";
@@ -115,8 +115,8 @@ namespace RestAPI_INFO7255.Repositories
                             var linkedServiceResponse = await _elasticClient.IndexAsync(linkedServiceDoc, i => i
                                 .Index("plans")
                                 .Id(service.LinkedService.ObjectId)
-                                .Routing(plan.ObjectId)
-                                .Type("_doc"));
+                                .Routing(plan.ObjectId));
+                            //.Type("_doc"));
                             if (!linkedServiceResponse.IsValid)
                             {
                                 var errorMessage = linkedServiceResponse.ServerError?.Error?.Reason ?? linkedServiceResponse.DebugInformation ?? "Unknown error";
@@ -142,8 +142,8 @@ namespace RestAPI_INFO7255.Repositories
                             var serviceCostShareResponse = await _elasticClient.IndexAsync(serviceCostShareDoc, i => i
                                 .Index("plans")
                                 .Id(service.PlanServiceCostShares.ObjectId)
-                                .Routing(plan.ObjectId)
-                                .Type("_doc"));
+                                .Routing(plan.ObjectId));
+                            //.Type("_doc"));
                             if (!serviceCostShareResponse.IsValid)
                             {
                                 var errorMessage = serviceCostShareResponse.ServerError?.Error?.Reason ?? serviceCostShareResponse.DebugInformation ?? "Unknown error";

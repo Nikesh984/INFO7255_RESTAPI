@@ -58,32 +58,109 @@ namespace RestAPI_INFO7255.Repositories
                 }
                 _logger.LogInformation($"Plan with ID {planId} deleted from Redis.");
 
-                // Step 3: Delete the Plan and all related documents from Elasticsearch using delete_by_query
-                _logger.LogInformation($"Deleting Plan {planId} and all related documents from Elasticsearch...");
-                var deleteByQueryResponse = await _elasticClient.DeleteByQueryAsync<object>(d => d
+                // Step 3: Refresh the index to ensure documents are searchable
+                _logger.LogInformation($"Refreshing plans index before deletion of Plan {planId}...");
+                var refreshResponse = await _elasticClient.Indices.RefreshAsync("plans");
+                if (!refreshResponse.IsValid)
+                {
+                    var errorMessage = refreshResponse.ServerError?.Error?.Reason ?? refreshResponse.DebugInformation ?? "Unknown error";
+                    _logger.LogError($"Failed to refresh plans index: {errorMessage}");
+                    return;
+                }
+                _logger.LogInformation($"Plans index refreshed.");
+
+                // Step 4: Debug - Check all documents related to the plan
+                var allDocsResponse = await _elasticClient.SearchAsync<object>(s => s
                     .Index("plans")
-                    .Routing(planId) // Add routing parameter
+                    .Routing(planId)
                     .Query(q => q
                         .Bool(b => b
                             .Should(
-                                s => s.Term(t => t.Field("_id").Value(planId)),
-                                s => s.HasParent<object>(hp => hp
-                                    .ParentType("plan")
-                                    .Query(pq => pq
-                                        .Term(t => t.Field("_id").Value(planId))
-                                    )
-                                ),
-                                s => s.HasParent<object>(hp => hp
-                                    .ParentType("linkedPlanServices")
-                                    .Query(pq => pq
-                                        .HasParent<object>(hp2 => hp2
-                                            .ParentType("plan")
-                                            .Query(pq2 => pq2
-                                                .Term(t => t.Field("_id").Value(planId))
+                                // Plan
+                                s => s
+                                    .Bool(b1 => b1
+                                        .Must(
+                                            m => m.Term(t => t.Field("_id").Value(planId)),
+                                            m => m.Term(t => t.Field("joinField.name").Value("plan"))
+                                        )
+                                    ),
+                                // Direct children (planCostShare, linkedPlanServices)
+                                s => s
+                                    .HasParent<object>(hp => hp
+                                        .ParentType("plan")
+                                        .Query(pq => pq
+                                            .Term(t => t.Field("_id").Value(planId))
+                                        )
+                                    ),
+                                // Grandchildren (linkedService, planserviceCostShares)
+                                s => s
+                                    .HasParent<object>(hp => hp
+                                        .ParentType("linkedPlanServices")
+                                        .Query(pq => pq
+                                            .HasParent<object>(hp2 => hp2
+                                                .ParentType("plan")
+                                                .Query(pq2 => pq2
+                                                    .Term(t => t.Field("_id").Value(planId))
+                                                )
                                             )
                                         )
                                     )
-                                )
+                            )
+                        )
+                    )
+                );
+                _logger.LogInformation($"Found {allDocsResponse.Hits.Count} total documents related to Plan {planId}.");
+                if (allDocsResponse.Hits.Count > 0)
+                {
+                    foreach (var hit in allDocsResponse.Hits)
+                    {
+                        _logger.LogInformation($"Document: {JsonSerializer.Serialize(hit.Source)}");
+                    }
+                }
+
+                // Step 5: Delete the Plan document directly using DeleteAsync
+                _logger.LogInformation($"Deleting Plan document {planId} directly from Elasticsearch...");
+                var deletePlanResponse = await _elasticClient.DeleteAsync(new DeleteRequest("plans", planId));
+                if (!deletePlanResponse.IsValid)
+                {
+                    var errorMessage = deletePlanResponse.ServerError?.Error?.Reason ?? deletePlanResponse.DebugInformation ?? "Unknown error";
+                    _logger.LogError($"Failed to delete Plan {planId} directly from Elasticsearch: {errorMessage}");
+                }
+                else
+                {
+                    _logger.LogInformation($"Plan {planId} deleted directly from Elasticsearch.");
+                }
+
+                // Step 6: Delete all related documents (children and grandchildren) from Elasticsearch using delete_by_query
+                _logger.LogInformation($"Deleting related documents for Plan {planId} from Elasticsearch...");
+                var deleteByQueryResponse = await _elasticClient.DeleteByQueryAsync<object>(d => d
+                    .Index("plans")
+                    .Routing(planId)
+                    .Refresh(true)
+                    .Query(q => q
+                        .Bool(b => b
+                            .Should(
+                                // Direct children (planCostShare, linkedPlanServices)
+                                s => s
+                                    .HasParent<object>(hp => hp
+                                        .ParentType("plan")
+                                        .Query(pq => pq
+                                            .Term(t => t.Field("_id").Value(planId))
+                                        )
+                                    ),
+                                // Grandchildren (linkedService, planserviceCostShares)
+                                s => s
+                                    .HasParent<object>(hp => hp
+                                        .ParentType("linkedPlanServices")
+                                        .Query(pq => pq
+                                            .HasParent<object>(hp2 => hp2
+                                                .ParentType("plan")
+                                                .Query(pq2 => pq2
+                                                    .Term(t => t.Field("_id").Value(planId))
+                                                )
+                                            )
+                                        )
+                                    )
                             )
                         )
                     )
@@ -92,14 +169,14 @@ namespace RestAPI_INFO7255.Repositories
                 if (!deleteByQueryResponse.IsValid)
                 {
                     var errorMessage = deleteByQueryResponse.ServerError?.Error?.Reason ?? deleteByQueryResponse.DebugInformation ?? "Unknown error";
-                    _logger.LogError($"Failed to delete Plan {planId} and related documents from Elasticsearch: {errorMessage}");
+                    _logger.LogError($"Failed to delete related documents for Plan {planId} from Elasticsearch: {errorMessage}");
                 }
                 else
                 {
                     _logger.LogInformation($"Matched {deleteByQueryResponse.Total} documents, deleted {deleteByQueryResponse.Deleted} documents related to Plan {planId} from Elasticsearch.");
                 }
 
-                // Step 4: Publish a PlanDeletedEvent for asynchronous processing
+                // Step 7: Publish a PlanDeletedEvent for asynchronous processing
                 await _bus.Publish(new PlanDeletedEvent { PlanId = planId });
                 _logger.LogInformation($"Published PlanDeletedEvent for Plan {planId}.");
             }
@@ -108,7 +185,6 @@ namespace RestAPI_INFO7255.Repositories
                 _logger.LogError($"Error deleting Plan {planId}: {ex.Message}");
             }
         }
-
         public async Task<(Plan?, string?)> GetPlanAsync(string planId, string? clientEtag)
         {
             string planKey = planId;
@@ -269,7 +345,8 @@ namespace RestAPI_INFO7255.Repositories
                 var indexResponse = await _elasticClient.IndexAsync(planDoc, i => i
                     .Index("plans")
                     .Id(plan.ObjectId)
-                    .Type("_doc"));
+                // Removed .Type("_doc")
+                );
                 if (!indexResponse.IsValid)
                 {
                     var errorMessage = indexResponse.ServerError?.Error?.Reason ?? indexResponse.DebugInformation ?? "Unknown error";
@@ -287,14 +364,15 @@ namespace RestAPI_INFO7255.Repositories
                         plan.PlanCostShares._org,
                         plan.PlanCostShares.Copay,
                         plan.PlanCostShares.ObjectId,
-                        ObjectType = plan.PlanCostShares.ObjectType, // Ensure objectType is set
+                        ObjectType = plan.PlanCostShares.ObjectType,
                         joinField = new { name = "planCostShare", parent = plan.ObjectId }
                     };
                     var costShareResponse = await _elasticClient.IndexAsync(costShareDoc, i => i
                         .Index("plans")
                         .Id(plan.PlanCostShares.ObjectId)
                         .Routing(plan.ObjectId)
-                        .Type("_doc"));
+                    // Removed .Type("_doc")
+                    );
                     if (!costShareResponse.IsValid)
                     {
                         var errorMessage = costShareResponse.ServerError?.Error?.Reason ?? costShareResponse.DebugInformation ?? "Unknown error";
@@ -316,14 +394,15 @@ namespace RestAPI_INFO7255.Repositories
                         {
                             service._org,
                             service.ObjectId,
-                            ObjectType = service.ObjectType, // Ensure objectType is set
+                            ObjectType = service.ObjectType,
                             joinField = new { name = "linkedPlanServices", parent = plan.ObjectId }
                         };
                         var serviceResponse = await _elasticClient.IndexAsync(serviceDoc, i => i
                             .Index("plans")
                             .Id(service.ObjectId)
                             .Routing(plan.ObjectId)
-                            .Type("_doc"));
+                        // Removed .Type("_doc")
+                        );
                         if (!serviceResponse.IsValid)
                         {
                             var errorMessage = serviceResponse.ServerError?.Error?.Reason ?? serviceResponse.DebugInformation ?? "Unknown error";
@@ -341,7 +420,7 @@ namespace RestAPI_INFO7255.Repositories
                             {
                                 service.LinkedService._org,
                                 service.LinkedService.ObjectId,
-                                ObjectType = service.LinkedService.ObjectType, // Ensure objectType is set
+                                ObjectType = service.LinkedService.ObjectType,
                                 Name = service.LinkedService.Name,
                                 joinField = new { name = "linkedService", parent = service.ObjectId }
                             };
@@ -349,7 +428,8 @@ namespace RestAPI_INFO7255.Repositories
                                 .Index("plans")
                                 .Id(service.LinkedService.ObjectId)
                                 .Routing(plan.ObjectId)
-                                .Type("_doc"));
+                            // Removed .Type("_doc")
+                            );
                             if (!linkedServiceResponse.IsValid)
                             {
                                 var errorMessage = linkedServiceResponse.ServerError?.Error?.Reason ?? linkedServiceResponse.DebugInformation ?? "Unknown error";
@@ -370,14 +450,15 @@ namespace RestAPI_INFO7255.Repositories
                                 service.PlanServiceCostShares._org,
                                 service.PlanServiceCostShares.Copay,
                                 service.PlanServiceCostShares.ObjectId,
-                                ObjectType = service.PlanServiceCostShares.ObjectType, // Ensure objectType is set
+                                ObjectType = service.PlanServiceCostShares.ObjectType,
                                 joinField = new { name = "planserviceCostShares", parent = service.ObjectId }
                             };
                             var serviceCostShareResponse = await _elasticClient.IndexAsync(serviceCostShareDoc, i => i
                                 .Index("plans")
                                 .Id(service.PlanServiceCostShares.ObjectId)
                                 .Routing(plan.ObjectId)
-                                .Type("_doc"));
+                            // Removed .Type("_doc")
+                            );
                             if (!serviceCostShareResponse.IsValid)
                             {
                                 var errorMessage = serviceCostShareResponse.ServerError?.Error?.Reason ?? serviceCostShareResponse.DebugInformation ?? "Unknown error";
@@ -389,6 +470,18 @@ namespace RestAPI_INFO7255.Repositories
                             }
                         }
                     }
+                }
+
+                // Refresh the index to make documents immediately searchable
+                var refreshResponse = await _elasticClient.Indices.RefreshAsync("plans");
+                if (!refreshResponse.IsValid)
+                {
+                    var errorMessage = refreshResponse.ServerError?.Error?.Reason ?? refreshResponse.DebugInformation ?? "Unknown error";
+                    _logger.LogError($"Failed to refresh plans index after indexing Plan {plan.ObjectId}: {errorMessage}");
+                }
+                else
+                {
+                    _logger.LogInformation($"Plans index refreshed after indexing Plan {plan.ObjectId}.");
                 }
             }
             catch (Exception ex)
